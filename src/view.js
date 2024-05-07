@@ -7,6 +7,7 @@ import {
 	getContext,
 	withScope,
 } from '@wordpress/interactivity';
+import { interval } from 'interactivity-api-helpers';
 
 const { state, actions } = store( 'iapi-gallery', {
 	state: {
@@ -95,14 +96,10 @@ const { state, actions } = store( 'iapi-gallery', {
 		initSlideShow: () => {
 			const ctx = getContext();
 			if ( ctx.autoplay ) {
-				const int = setInterval(
-					withScope( () => {
-						actions.nextImage();
-					} ),
-					state.transitionsSpeed
-				);
 				// The returned function executes when the element is removed from the DOM.
-				return () => clearInterval( int );
+				return interval( () => {
+					actions.nextImage();
+				}, state.transitionsSpeed );
 			}
 		},
 		initSlide: () => {
