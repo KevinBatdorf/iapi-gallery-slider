@@ -15,24 +15,23 @@ const { state, actions } = store( 'iapi-gallery', {
 			if ( ctx.continuous ) {
 				return false;
 			}
-			return ctx.currentSlide === 0;
+			return ctx.currentSlide === 1;
 		},
 		get noNextSlide() {
 			const ctx = getContext();
 			if ( ctx.continuous ) {
 				return false;
 			}
-			return ctx.currentSlide === ctx.totalSlides - 1;
+			return ctx.currentSlide === ctx.totalSlides;
 		},
 		get currentPos() {
 			const ctx = getContext();
-			return `translateX(-${ ctx.currentSlide * 100 }%)`;
+			return `translateX(-${ ( ctx.currentSlide - 1 ) * 100 }%)`;
 		},
 		get imageIndex() {
 			const ctx = getContext();
-			return `${ ctx.currentSlide + 1 }/${ ctx.totalSlides }`;
+			return `${ ctx.currentSlide }/${ ctx.totalSlides }`;
 		},
-
 		get transitionsSpeed() {
 			const ctx = getContext();
 			return Number( ctx.speed ) * 1000;
@@ -41,8 +40,9 @@ const { state, actions } = store( 'iapi-gallery', {
 	actions: {
 		prevImage: () => {
 			const ctx = getContext();
-			if ( ctx.continuous && ctx.currentSlide === 0 ) {
-				ctx.currentSlide = ctx.totalSlides - 1;
+			console.log( ctx.currentSlide );
+			if ( ctx.continuous && ctx.currentSlide === 1 ) {
+				ctx.currentSlide = ctx.totalSlides;
 				return;
 			}
 			ctx.currentSlide--;
@@ -51,9 +51,9 @@ const { state, actions } = store( 'iapi-gallery', {
 			const ctx = getContext();
 			if (
 				( ctx.continuous || ctx.autoplay ) &&
-				ctx.currentSlide === ctx.totalSlides - 1
+				ctx.currentSlide === ctx.totalSlides
 			) {
-				ctx.currentSlide = 0;
+				ctx.currentSlide = 1;
 				return;
 			}
 			ctx.currentSlide++;
@@ -94,10 +94,16 @@ const { state, actions } = store( 'iapi-gallery', {
 	callbacks: {
 		initSlideShow: () => {
 			const ctx = getContext();
-			if ( ! ctx.autoplay ) return;
-			interval( () => {
-				actions.nextImage();
-			}, state.transitionsSpeed );
+			if ( ctx.autoplay ) {
+				const int = setInterval(
+					withScope( () => {
+						actions.nextImage();
+					} ),
+					state.transitionsSpeed
+				);
+				// The returned function executes when the element is removed from the DOM.
+				return () => clearInterval( int );
+			}
 		},
 		initSlide: () => {
 			const ctx = getContext();
@@ -105,8 +111,6 @@ const { state, actions } = store( 'iapi-gallery', {
 			// Adds the element reference to the `slides` array.
 			const { ref } = getElement();
 			ctx.slides.push( ref );
-			ctx.totalSlides = ctx.slides.length;
-
 			// The returned function executes when the element is removed from
 			// the DOM.
 			return () => {
@@ -126,24 +130,3 @@ const { state, actions } = store( 'iapi-gallery', {
  */
 const debugLog = ( data ) =>
 	console.log( JSON.parse( JSON.stringify( data ) ) );
-
-/**
- * Helper for a more performant setInterval.
- *
- * @param {function} callback
- * @param {number} interval
- * @returns
- */
-const interval = ( callback, interval ) => {
-	let start = null;
-	const update = withScope( ( timestamp ) => {
-		if ( ! start ) start = timestamp;
-		const elapsedTime = timestamp - start;
-		if ( elapsedTime > interval ) {
-			callback();
-			start = null;
-		}
-		requestAnimationFrame( update );
-	} );
-	requestAnimationFrame( update );
-};
