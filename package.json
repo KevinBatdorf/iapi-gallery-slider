@@ -18,8 +18,7 @@
 		"[^.]*"
 	],
 	"dependencies": {
-		"@wordpress/interactivity": "^5.1.0",
-		"interactivity-api-helpers": "^0.2.0"
+		"@wordpress/interactivity": "^5.1.0"
 	},
 	"devDependencies": {
 		"@wordpress/scripts": "^27.3.0"
